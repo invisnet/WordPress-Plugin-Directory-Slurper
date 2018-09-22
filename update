@@ -164,10 +164,16 @@ if ( $last_revision === $svn_last_revision ) {
 			}
 		}
 	}
+	fclose($pipes[1]);
 	echo "\n";
 
-	$status = proc_get_status( $svn );
-	if ( $status['running'] ) {
+	// just because we've slurped all the output doesn't mean svn has exited yet
+	for ( $i = 0; $i < 60; $i++ ) {
+		$status = proc_get_status( $svn );
+		if ( !$status['running'] ) break;
+		sleep(1);
+	}
+	if ( 60 == $i ) {
 		throw new Exception(
 			'svn should not still be running.'
 		);
